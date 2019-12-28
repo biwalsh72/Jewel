@@ -32,38 +32,3 @@
 // allow users to abbreviate type names to a single letter (or two letters) for convenience when writing code
 // 
 
-//allows reading of characters from a string
-function InputStream(input) {
-    var pos = 0; line = 1; col = 0;
-    return { 
-    next :  next,
-    peek :  peek,
-    eof :   eof,
-    croak : croak
-    };
-    //returns next value and discards it from stream
-    function next() {
-        var ch = input.charAt(pos++);
-        if (ch == "\n") line++, col = 0; else col++;
-        return ch;
-    }
-    //returns next value without removing from stream
-    function peek() {
-        return input.charAt(pos);
-    }
-    //returns true at the end of the stream
-    function eof() {
-        return peek() == "";
-    }
-    //throws error
-    function croak(msg) {
-        throw new Error(msg + " (" + line + ":" + col + ")");
-    }
-}
-
-
-
-
-
-
-
