@@ -1,4 +1,4 @@
-// Jewel is an interpretive programming lanauge built using Javascript.
+// Jewel is a programming lanauge built using Javascript.
 
 // Jewel is a gradual typed language, meaning that variables can be assigned a type at compile time or will be automitcally checked at run time. 
 // This allows you to define a variable in two ways:

@@ -43,9 +43,13 @@ export class Lexer {
     readToken() {
         this.skipWhiteSpaces();
 
+        //recognize end of input
         if (this.position >= this.inputSize) {
             return new Token(tokenTypes.EndOfInput);
         }
+
+        //set the current file position to be a new symbol for tokenizing
+        var sym = this.input.charAt(this.position);
 
 
     }
