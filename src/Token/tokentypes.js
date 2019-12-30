@@ -44,6 +44,7 @@ export let tokenTypes = {
     // Delimiters
     Colon: ':',
     Comma: ',',
+    Dot: '.',
     LeftBrace: '{',
     LeftBracket: '[',
     LeftParen: '(',
@@ -55,14 +56,4 @@ export let tokenTypes = {
     // Special token types
     EndOfInput: 'EndOfInput',
     Unrecognized: 'Unrecognized'
-
-    
-
-
-    
-
-
-
-
-
 };
