@@ -40,6 +40,7 @@ export let tokenTypes = {
     //Keywords
     Null: ['null', 'nil'],
     Func: 'func',
+    Identifier: 'IDENTIFIER',
 
     // Delimiters
     Colon: ':',
