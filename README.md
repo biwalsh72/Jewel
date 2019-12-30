@@ -1,2 +1,2 @@
 # Jewel
- A small interpretive programming language
+ A small interpretive programming language built using Javascript. 
