@@ -63,4 +63,14 @@ export class CharIdentifier {
     static isStringDelimiter(char) {
         return char === '\"';
     }
+
+    static isEscapeCharacter(char) {
+        return char === '\\';
+    }
+
+    static isEndOfEscapeSequence(char) {
+        return char === '\"' || char === '\\' || char === 'n'
+            || char === 'r' || char === 't' || char === 'b'
+            || char === 'f' || char === 'v' || char === '0';
+    }
 }

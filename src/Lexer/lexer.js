@@ -1,7 +1,8 @@
-import { Token } from '../Token/tokenizer'
-import { tokenTypes } from '../Token/tokentypes'
+import { Token } from '../Token/tokenizer';
+import { tokenTypes } from '../Token/tokentypes';
 import { CharIdentifier } from '../../Char/charIdentifier';
 import { Report } from '../Diagnostics/error';
+import { Fsm, InvalidFsmState } from '../Token/fsm';
 
 export class Lexer {
     constructor(input) { 
@@ -174,6 +175,141 @@ export class Lexer {
             }
         }
         return new Token(token, token, this.line, this.column);
+    }
+
+    recognizeDelimiter() {
+        let sym = this.input.charAt(this.position);
+        let col = this.column;
+        this.position++;
+        this.column++;
+        switch (sym) {
+            case '{':
+                return new Token(tokenTypes.LeftBrace, '{', this.line, col);
+            case '}':
+                return new Token(tokenTypes.RightBrace, '}', this.line, col);
+            case '[':
+                return new Token(tokenTypes.LeftBracket, '[', this.line, col);
+            case ']':
+                return new Token(tokenTypes.RightBracket, ']', this.line, col);
+            case '(':
+                return new Token(tokenTypes.LeftParen, '(', this.line, col);
+            case ')':
+                return new Token(tokenTypes.RightParen, ')', this.line, col);
+            case ',':
+                return new Token(tokenTypes.Comma, ',', this.line, col);
+            case ':':
+                return new Token(tokenTypes.Colon, ':', this.line, col);
+            default:
+                throw new Error(Report.error(this.line, this.column, `Unrecognized token '${symbol}'.`));
+        }
+    }
+
+    recognizeOperator() {
+        let sym = this.input.charAt(this.position);
+        let lookahead = this.position + 1 < this.inputSize ? this.input.charAt(this.postion + 1) : null;
+        let col = this.column;
+        if (lookahead !== null) {
+            switch (lookahead) {
+                case '=':
+                case '&':
+                case '|':
+                case '-':
+                default: {
+                    this.position++;
+                    this.column++;
+                }
+            }
+        }
+        this.position++;
+        this.column++;
+        switch (sym) {
+            case '=':
+                return lookahead !== null && lookahead === '=' ? new Token(tokenTypes.DoubleEqual, '==', this.line, col) : new Token (tokenTypes.Equal, '=', this.line, col);
+            case '+': {
+                if (lookahead !== null) {
+                    return new Token(tokenTypes.Plus, '+', this.line, col);
+                }
+            }
+            case '>':
+                return lookahead !== null && lookahead === '=' ? new Token(tokenTypes.GreaterEqual, '>=', this.line, col) : new Token(tokenTypes.Greater, '>', this.line, col);
+            case '<':
+                return lookahead !== null && lookahead === '=' ? new Token(tokenTypes.LessEqual, '<=', this.line, col) : new Token(tokenTypes.Less, '<', this.line, col);
+        }
+    }
+
+    buildStringRecognizer() {
+        let rec = new Fsm();
+        rec.states = new Set(['Start', 'StartString', 'Character', 'Backslash', 'EscapeSequence', 'EndString']);
+        rec.startState = 'Start';
+        rec.finalStates = new Set(['EndString']);
+        rec.transition = (state, sym) => {
+            switch (state) {
+                case 'Start':
+                    if (CharIdentifier.isStringDelimiter(sym)) {
+                        return 'StartString';
+                    }
+                    break;
+                case 'StartString':
+                case 'Character':
+                    if (CharIdentifier.isStringDelimiter(sym)) {
+                        return 'EndString';
+                    }
+                    if (CharIdentifier.isEscapeCharacter(sym)) {
+                        return 'Backslash';
+                    }
+                    return 'Character';
+                case 'Backslash':
+                    if (CharIdentifier.isEndOfEscapeSequence(sym)) {
+                        return 'EscapeSequence';
+                    }
+                    break;
+                case 'EscapeSequence':
+                    if (CharIdentifier.isStringDelimiter(sym)) {
+                        return 'EndString';
+                    }
+                    if (CharIdentifier.isEscapeCharacter(sym)) {
+                        return 'Backslash';
+                    }
+                    return 'Character';
+                default:
+                    break;
+            }
+            return InvalidFsmState;
+        };
+        return rec;
+    }
+
+    buildNumberRecognizer() {
+        let rec = new Fsm();
+        rec.states = new Set(['Start', 'Zero', 'Integer', 'StartDecimal', 'Decimal', 'End']);
+        rec.startState = 'Start';
+        rec.finalStates = new Set(['Zero', 'Integer', 'StartDecimal', 'Decimal', 'End']);
+        rec.transition = (state, sym) => {
+            switch (state) {
+                case 'Start':
+                    if (sym === '0') { return 'Zero'; }
+                    if (sym === '.') { return 'StartDecimal'; }
+                    if (CharIdentifier.isDigit(sym)) { return 'Integer'; }
+                    break;
+                case 'Zero':
+                    if (sym == '.') { return 'StartDecimal'; }
+                    break;
+                case 'Integer':
+                    if (CharIdentifier.isDigit(sym)) { return 'Integer'; }
+                    if (sym == '.') { return 'StartDecimal'; }
+                    break;
+                case 'StartDecimal':
+                    if (CharIdentifier.isDigit(sym)) { return 'Decimal'; }
+                    return InvalidFsmState;
+                case 'Decimal':
+                    if (CharIdentifier.isDigit(sym)) { return 'Decimal'; }
+                    break;
+                default:
+                    break;
+            }
+            return InvalidFsmState;
+        };
+        return rec;
     }
 
     skipWhiteSpaces() {
