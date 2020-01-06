@@ -9,3 +9,8 @@ Gradual typing is a type system that allows variables and expressions to be give
 or to be left untyped and evaluated at run-time: 
 
  -  **like Javascript or Python**  --- var x = 1;
+
+
+### TO DO
+- Build Parser to translate code into AST Nodes
+- Build small REPL to test and display code samples in the terminal
